@@ -87,6 +87,7 @@ func (v *Validator) Validate() url.Values {
 		if _, ok := nr[field]; ok {
 			continue
 		}
+
 		for _, rule := range rules {
 			if !isRuleExist(rule) {
 				panic(fmt.Errorf("govalidator: %s is not a valid rule", rule))
@@ -102,6 +103,18 @@ func (v *Validator) Validate() url.Values {
 				} else {
 					validateCustomRules(fld, rule, msg, nil, errsBag)
 				}
+			} else if v.Opts.Request.Header.Get("Content-Type") == "application/json" {
+
+				var tempBody map[string]interface{}
+				err := json.NewDecoder(v.Opts.Request.Body).Decode(&tempBody)
+				if err != nil {
+				}
+
+				tempValue := fmt.Sprintf("%v", tempBody[field])
+
+				reqVal := strings.TrimSpace(tempValue)
+				validateCustomRules(field, rule, msg, reqVal, errsBag)
+
 			} else {
 				// validate if custom rules exist
 				reqVal := strings.TrimSpace(v.Opts.Request.Form.Get(field))
